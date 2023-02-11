@@ -20,6 +20,11 @@ Fruit can be either of the objects that we have defined
 
 const apple: Fruit = { colour: 'red', name: 'apple' };
 
+
+/*
+The colour orange against the fruit apple is not a valid type
+*/
+
 const invalidApple: Fruit = { colour: 'orange', name: 'apple' };
 
 /*

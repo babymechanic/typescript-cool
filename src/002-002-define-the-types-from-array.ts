@@ -20,3 +20,8 @@ fruitColours.forEach((colour) => console.log(colour));
 
 const apple: FruitName = 'apple';
 const red: FruitColor = 'red';
+
+/*
+you still can create data with incorrect types such as an apple with the colour orange
+so how can we restrict the data while being able to iterate through all the data
+ */
