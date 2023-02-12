@@ -5,6 +5,9 @@ export {};
 // let's assume we have an object which we want to mock
 
 class Logger {
+
+    notAFunction = 'not a function';
+
     warn(message: string) {
     }
 
@@ -24,16 +27,19 @@ function logSomething(logger: Logger, message: string) {
 
 describe('Logger', () => {
 
+    // we are creating the jest mock equivalent for all the methods
     type MockLogger = {
-        warn: jest.MockedFunction<Logger['warn']>
-        error: jest.MockedFunction<Logger['error']>
-        info: jest.MockedFunction<Logger['info']>
+        warn: jest.MockedFunction<Logger['warn']>;
+        error: jest.MockedFunction<Logger['error']>;
+        info: jest.MockedFunction<Logger['info']>;
+        notAFunction: Logger['notAFunction'];
     };
 
     const mockLogger: MockLogger = {
         warn: jest.fn(),
         error: jest.fn(),
-        info: jest.fn()
+        info: jest.fn(),
+        notAFunction: 'not a function'
     };
 
     it('should log the message using info', () => {
@@ -43,7 +49,10 @@ describe('Logger', () => {
     });
 })
 
-
+/*
+here we are having to completely redefine all the functions
+if the object has a lot more methods it could get pretty painful
+*/
 
 
 
