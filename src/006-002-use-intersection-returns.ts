@@ -16,9 +16,9 @@ if (result.status === 'created') {
 }
 
 /*
-now there is no hidden contract
+now there is no hidden throw which we have to remember
 
 any caller is aware of the return types and has to handle them
 
-without handling the different types the caller would not be able to access the relevant props
+without asserting on the type the caller would not be able to access the relevant props
 */
