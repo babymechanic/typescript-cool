@@ -1,5 +1,6 @@
 // common code
-export interface ParamType<T> {
+
+interface ParamType<T> {
     parse(value: string): T;
 }
 
@@ -16,7 +17,7 @@ const numberType: ParamType<number> = {
 };
 
 function parseQueryParams<
-    TParams extends { [key: string]: ParamType<unknown> }
+    TParams extends { [key: string]: ParamType<any> }
 >(queryDefinition: TParams, input: Partial<{ [key in keyof TParams]: string }>) {
     type QueryDefinition = typeof queryDefinition;
     type Keys = keyof QueryDefinition;
@@ -33,18 +34,20 @@ function parseQueryParams<
 const searchFruitQueryParams = {
     query: stringType,
     colourId: numberType,
-}
+} satisfies { [key: string]: ParamType<unknown> };
 
 type SearchFruitQueryParams = {
-    query?: string;
-    colourId?: number;
+    query: string | undefined;
+    colourId: string | undefined;
 }
 
 const params = parseQueryParams(searchFruitQueryParams, {}) as SearchFruitQueryParams;
 
 /*
-in here we lose type checking by using an as
-we end up creating a type which might not be in sync with the actual input
+in here we lose type checking by using as for casting where we might potentially make a mistake
+
+we end up creating a type which might not be in sync with the actual configuration of param
+
 this type needs to be updated every time we make changes to `searchFruitQueryParams`
 */
 
