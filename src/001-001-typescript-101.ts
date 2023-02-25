@@ -27,7 +27,7 @@ type FruitProp = keyof Fruit;
 
 const props: FruitProp[] = ['color', 'name'];
 
-// intersection type allows you to saw that the type could be any one of the types
+// intersection type allows you to say that the type could be any one of the types
 
 type Colour = 'red' | 'blue' | 'pink';
 
