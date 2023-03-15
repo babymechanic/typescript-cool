@@ -13,3 +13,5 @@
 .editorconfig
 .yarn
 dist
+
+node_modules
