@@ -11,12 +11,18 @@
 - Things `outside` the type system
 - While it will cover `some basics` the intent is not to cover code flow
 
+## Expectations
+
+- Things which don't seem relevant will be put in a parking lot and talked about later if we have time
+
+
 ---
 
 ## 101 > Variable type inference
 
-```typescript
+### Wide type inference
 
+```typescript
 let greeting = 'hello world'; 
 let myGreeting = () => console.log('hello world');
 let myObject = {greeting: 'hello world'};
@@ -26,8 +32,22 @@ greeting = 21321;
 myGreeting = 'hello world';
 myObject = () => console.log('hello world');
 // here we are trying to reassign different types which would make compilation fail
+```
 
-const notNullable: string = null;
+### Narrow type inference
+
+```typescript
+const greeting = 'hello world' as const;
+// when we apply as const as an assertion 
+// typescript can make more restricted assestions from the data
+// in this case the type of the varible is a subset of string which is 'hello world'
+```
+
+### Undefined and nulls
+
+```typescript
+
+greeting = null;
 // this is not allowed as the variable is not nullable
 
 const nullable: null | string | undefined = null;
@@ -96,3 +116,19 @@ class WoodDuck implements WildDuck {
 }
 
 ```
+For the purposes of our session we will be using just `type`.
+
+## Questions ?
+
+---
+
+## 101 > Combining types
+
+### Intersection
+
+```typescript
+
+type FruitName = ''
+
+```
+
