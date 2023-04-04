@@ -631,3 +631,113 @@ if (result.status === 'created') {
 - Consumers are now aware of the different possible return types
 
 ### Questions ?
+
+---
+
+## Patterns > Parsing to a type > Create our version of the type
+
+### Common Code
+
+```typescript
+type ParamParser<T> = (value: string) => T;
+const stringType: ParamParser<string> = (value: string) => value;
+const numberType: ParamParser<number> = (value: string) => parseInt(value, 10);
+
+function parseQueryParams<
+    TParams extends { [key: string]: ParamParser<any> }
+>(queryDefinition: TParams, input: Partial<{ [key in keyof TParams]: string }>) {
+    type QueryDefinition = typeof queryDefinition;
+    type Keys = keyof QueryDefinition;
+    const keys = Object.keys(queryDefinition) as Keys[];
+    return keys.reduce((acc, key) => {
+        const rawValue = input[key];
+        acc[key] = rawValue == null ? rawValue : queryDefinition[key](rawValue);
+        return acc;
+    }, {} as Partial<Record<Keys, unknown>>)
+}
+
+```
+
+### Route specific code
+
+```typescript
+
+// route specific code
+const searchFruitQueryParams = {
+    query: stringType,
+    colourId: numberType,
+};
+
+type SearchFruitQueryParams = {
+    query: string | undefined;
+    colourId: string | undefined;
+}
+
+const params = parseQueryParams(searchFruitQueryParams, {}) as SearchFruitQueryParams
+console.log(params.query);
+console.log(params.colourId);
+```
+
+### Issues
+
+- Having to create a type separate from the parsing config
+- Type could go out of sync with the actual parsing config and we would not know
+- Making consumers define the type inference might make the process buggy
+
+---
+
+## Patterns > Parsing to a type > Create type from the config
+
+### Common code
+
+```typescript
+type ParamParser<T> = (value: string) => T;
+const stringType: ParamParser<string> = (value: string) => value;
+const numberType: ParamParser<number> = (value: string) => parseInt(value, 10);
+
+type InferFromParams<TConfig extends { [key: string]: ParamParser<unknown> }> = {
+    [key in keyof TConfig]: TConfig[key] extends ParamParser<infer ValueType> 
+        ? (ValueType | undefined) 
+        : never;
+}
+
+function parseQueryParams<
+    TParams extends { [key: string]: ParamParser<any> }
+>(queryDefinition: TParams, input: Partial<{ [key in keyof TParams]: string }>): InferFromParams<typeof queryDefinition> {
+    type QueryDefinition = typeof queryDefinition;
+    type Keys = keyof QueryDefinition;
+    const keys = Object.keys(queryDefinition) as Keys[];
+    return keys.reduce((acc, key) => {
+        const rawValue = input[key];
+        const parser = queryDefinition[key];
+        acc[key] = rawValue == null ? undefined : parser(rawValue);
+        return acc;
+    }, {} as InferFromParams<typeof queryDefinition>)
+}
+```
+
+### Route specific code
+
+```typescript
+const searchFruitQueryParams = {
+    query: stringType,
+    colourId: numberType,
+};
+
+const params = parseQueryParams(searchFruitQueryParams, {});
+
+console.log(params.query);
+console.log(params.colourId);
+```
+
+### Benefits
+
+- We now have a type from the config provided by the consumer
+- No casting by the consumer to a mirrored type
+- If the config changes access to any removed prop would cause compilation failure
+
+### Questions ?
+
+---
+
+### Finito and Thanks !!!
