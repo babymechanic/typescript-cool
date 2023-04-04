@@ -366,6 +366,8 @@ const invalidApple: Fruit = { colour: 'orange', name: 'apple' }; // this would n
 - The colour orange against the fruit apple is not a valid type
 - you can further access a sub property as a type
 
+### Questions ?
+
 ---
 
 ## Patterns > Dealing with external libraries > Issues with consuming library
@@ -469,6 +471,8 @@ doEverything(createParam()).then(handleReturn);
 - if the library has breaking changes our compilation would catch it
 - we don't have to maintain a mirror of the typings
 
+### Questions ?
+
 ---
 
 ## Patterns > Mapping to a subtype of the original > Manually create jest mock types
@@ -563,3 +567,67 @@ it('should log the message using info', () => {
 - Just need one type which can map all objects which need to be mocked
 - If the actual type changes no changes are required to the utility type
 - If actual type loses a prop any usage of the mocked type prop will be caught by the compiler
+
+### Questions ?
+
+---
+
+## Patterns > Multiple return types > Validation with errors
+
+```typescript
+const createGreeting = (name: string): string => {
+    if (name === '') throw new Error('name cannot be an empty string');
+    return `Hello ${name}!`;
+}
+
+try {
+    const greeting = createGreeting('world');
+    console.log(greeting);
+} catch (e) {
+    if (e instanceof Error) {
+        console.error(e.message);
+    } else {
+        throw e;
+    }
+}
+```
+### Issues
+
+- Should not throwing errors for things which can be checked by code
+- It is not apparent in the contract and consumers would be unaware
+- Ideally we would want to consumer to handle the validation failure how they choose
+- What if we wanted to add more states like a warning
+- Ideally we want a mechanism to return more than one type of value
+
+---
+
+## Patterns > Multiple return types > Validation with intersections
+
+```typescript
+type Failure = { status: 'error' | 'warning'; reason: string; }
+type Created = { status: 'created'; greeting: string; }
+
+const createGreeting = (name: string): Failure | Created => {
+    if (name === '') return {status: 'error', reason: 'name cannot be an empty string'};
+    if (name.length < 3) return {status: 'warning', reason: 'name should ideally be more 3 or more letters'};
+    return {status: 'created', greeting: `Hello ${name}!`};
+}
+
+const result = createGreeting('world');
+
+// none of the properties below can be accessed without checking for the status
+if (result.status === 'created') {
+    console.log(result.greeting);
+} else if (result.status === 'error') {
+    console.error(result.reason);
+} else if (result.status === 'warning') {
+    console.error(result.reason);
+}
+```
+### Benefits
+
+- We can now return more than one type
+- We cannot access the values of the type before asserting on the status
+- Consumers are now aware of the different possible return types
+
+### Questions ?
