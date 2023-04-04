@@ -59,7 +59,7 @@ const nullable: null | string | undefined = null;
 
 ---
 
-## 101 > Defining types
+## 101 > Defining types Pt 1
 
 ### Interfaces
 
@@ -90,6 +90,10 @@ type Person = {
 type Greet = (name: string) => void;
 
 ```
+
+---
+
+## 101 > Defining types Pt 2
 
 ### Classes can also be used as interfaces
 
@@ -122,7 +126,7 @@ For the purposes of our session we will be using just `type`.
 
 ---
 
-## 101 > Combining types
+## 101 > Combining types Pt 1
 
 ### Intersection
 
@@ -145,6 +149,10 @@ type Quack = { quack(): void };
 type FlyingDuck = Fly & Quack;
 
 ```
+
+---
+
+## 101 > Combining types Pt 2
 
 ### Mapped
 
@@ -175,7 +183,7 @@ type False = IsHelloWorld<'Not Hello World'>;
 
 ---
 
-## 101 > Type inference tools
+## 101 > Type inference tools Pt 1
 
 ### Primitive types with typeof
 
@@ -202,6 +210,10 @@ type Orange = typeof orange; // the type is exactly and orange because of const 
 type OrangeColour = Orange['color']; // will be 'orange' and not string
 ```
 
+---
+
+## 101 > Type inference tools Pt 2
+
 ### Object props with keyof
 
 ```typescript
@@ -213,7 +225,7 @@ const keys: FruitKey[] = ['name', 'color'];
 
 ```
 
-### Conditional Types
+### Conditional check
 
 ```typescript
 const apple = {name: 'apple', quantity: 1} as const;
@@ -291,7 +303,7 @@ fruits.forEach((fruit) => {
 
 ---
 
-## Patterns > Dealing with constants > Inferring the type from the data
+## Patterns > Dealing with constants > Inferring the type from the data Pt 1
 
 ```typescript
 const fruitNames = ['apple', 'orange'] as const;
@@ -318,6 +330,10 @@ fruits.forEach((fruit) => {
 - a const assertion tells typescript that the data is restricted to these instead of string
 - the types are derived from the data instead
 - we only ever need to update the array and the type is automatically updated
+
+---
+
+## Patterns > Dealing with constants > Inferring the type from the data Pt 2
 
 ### Drawbacks
 
@@ -370,7 +386,7 @@ const invalidApple: Fruit = { colour: 'orange', name: 'apple' }; // this would n
 
 ---
 
-## Patterns > Dealing with external libraries > Issues with consuming library
+## Patterns > Dealing with external libraries > Issues with consuming library Pt 1
 
 
 ### Situation
@@ -389,23 +405,24 @@ export async function doEverything(param: UnExportedParam): Promise<undefined | 
 }
 ```
 
-### Options
+---
 
-#### Keep consumption close to the call
+## Patterns > Dealing with external libraries > Issues with consuming library Pt 2
+
+### Option 1 Keep consumption close to the call
 
 ```typescript
 const param = { someProp: 'test value' };
 doEverything(param).then(response => console.log(response?.someProp));
 ```
 
-##### Issues
+#### Issues
 
 - the param variable is typed by the value
 - another developer coming in would not know what's the expected shape of the param
 - it's hard to build away from the call as there is no defined typing
 
-
-#### Keep our mirror of the typing
+### Options 2 Keep our mirror of the typing
 
 ```typescript
 // types.ts
@@ -419,13 +436,16 @@ const responseHandler = (response: OurMirroredReturn | undefined): void => conso
 // invoke.ts
 doEverything(paramFactory()).then(responseHandler);
 ```
-
-##### Benefits
+#### Benefits
 
 - now the request creation and response handling can be key separate from invocation
 - people can now get a contract 
 
-##### Issues
+---
+
+## Patterns > Dealing with external libraries > Issues with consuming library Pt 3
+
+#### Issues
 
 - typings have to be maintained by the consumer
 - typings can go out of sync
@@ -433,19 +453,6 @@ doEverything(paramFactory()).then(responseHandler);
 ---
 
 ## Patterns > Dealing with external libraries > Infer types from the exported function
-
-### External library
-
-```typescript
-// external library
-type UnExportedParam = { someProp: string };
-type UnExportedReturn = { someProp: string };
-
-// only the function was exported
-export async function doEverything(param: UnExportedParam): Promise<undefined | UnExportedReturn> {
-    return undefined;
-}
-```
 
 ### Our usage
 
@@ -475,14 +482,13 @@ doEverything(createParam()).then(handleReturn);
 
 ---
 
-## Patterns > Mapping to a subtype of the original > Manually create jest mock types
+## Patterns > Mapping to a subtype of the original > Manually create jest mock types Pt 1
 
 ### One of many types that need to be mocked
 
 A logger which is used in the project with a test
 
 ```typescript
-
 // actual code
 class Logger {
     info(message: string) {
@@ -495,7 +501,13 @@ class Logger {
 function logSomething(logger: Logger, message: string) {
     logger.info(message);
 }
+```
 
+---
+
+## Patterns > Mapping to a subtype of the original > Manually create jest mock types Pt 2
+
+```typescript
 // test code
 type MockLogger = {
     info: jest.MockedFunction<Logger['info']>;
@@ -522,26 +534,11 @@ it('should log the message using info', () => {
 
 ---
 
-## Patterns > Mapping to a subtype of the original > Create a mapper to handle all jest mock types
-
+## Patterns > Mapping to a subtype of the original > Create a mapped type for jest mock types
 
 ### Create a mapped type
 
 ```typescript
-
-// actual code
-class Logger {
-    info(message: string) {
-    }
-
-    error(message: string) {
-    }
-}
-
-function logSomething(logger: Logger, message: string) {
-    logger.info(message);
-}
-
 // our utility mapped type 
 type MockedObject<T extends object> = {
     [key in keyof T]: T[key] extends ((...args: any[]) => any) ? jest.MockedFunction<T[key]> : T[key]
@@ -634,7 +631,7 @@ if (result.status === 'created') {
 
 ---
 
-## Patterns > Parsing to a type > Create our version of the type
+## Patterns > Parsing to a type > Create our version of the type Pt 1
 
 ### Common Code
 
@@ -657,6 +654,10 @@ function parseQueryParams<
 }
 
 ```
+
+---
+
+## Patterns > Parsing to a type > Create our version of the type Pt 2
 
 ### Route specific code
 
@@ -686,7 +687,7 @@ console.log(params.colourId);
 
 ---
 
-## Patterns > Parsing to a type > Create type from the config
+## Patterns > Parsing to a type > Create type from the config Pt 1
 
 ### Common code
 
@@ -695,6 +696,7 @@ type ParamParser<T> = (value: string) => T;
 const stringType: ParamParser<string> = (value: string) => value;
 const numberType: ParamParser<number> = (value: string) => parseInt(value, 10);
 
+// utility mapped type
 type InferFromParams<TConfig extends { [key: string]: ParamParser<unknown> }> = {
     [key in keyof TConfig]: TConfig[key] extends ParamParser<infer ValueType> 
         ? (ValueType | undefined) 
@@ -715,6 +717,10 @@ function parseQueryParams<
     }, {} as InferFromParams<typeof queryDefinition>)
 }
 ```
+
+---
+
+## Patterns > Parsing to a type > Create type from the config Pt 2
 
 ### Route specific code
 
