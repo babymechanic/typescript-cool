@@ -335,7 +335,7 @@ const fruits: Fruit[] = [
 
 ---
 
-## Patterns > Dealing with constants > Inferring the type from the final data
+## Patterns > Dealing with constants > Inferring the type from the constrained data
 
 ```typescript
 const fruits = [
@@ -365,3 +365,106 @@ const invalidApple: Fruit = { colour: 'orange', name: 'apple' }; // this would n
 - Fruit can be either of the objects that we have defined
 - The colour orange against the fruit apple is not a valid type
 - you can further access a sub property as a type
+
+---
+
+## Patterns > Dealing with external libraries > Issues with consuming library
+
+
+### Situation
+
+- We are dependent on another typescript library
+- Unfortunately the library has not exported their types
+
+```typescript
+// external library
+type UnExportedParam = { someProp: string };
+type UnExportedReturn = { someProp: string };
+
+// only the function was exported
+export async function doEverything(param: UnExportedParam): Promise<undefined | UnExportedReturn> {
+    return undefined;
+}
+```
+
+### Options
+
+#### Keep consumption close to the call
+
+```typescript
+const param = { someProp: 'test value' };
+doEverything(param).then(response => console.log(response?.someProp));
+```
+
+##### Issues
+
+- the param variable is typed by the value
+- another developer coming in would not know what's the expected shape of the param
+- it's hard to build away from the call as there is no defined typing
+
+
+#### Keep our mirror of the typing
+
+```typescript
+// types.ts
+type OurMirroredParam = { someProp: string };
+type OurMirroredReturn = { someProp: string };
+
+// factory.ts, handler.ts
+const paramFactory = (): OurMirroredParam => ({someProp: 'test value'});
+const responseHandler = (response: OurMirroredReturn | undefined): void => console.log(response?.someProp);
+
+// invoke.ts
+doEverything(paramFactory()).then(responseHandler);
+```
+
+##### Benefits
+
+- now the request creation and response handling can be key separate from invocation
+- people can now get a contract 
+
+##### Issues
+
+- typings have to be maintained by the consumer
+- typings can go out of sync
+
+---
+
+## Patterns > Dealing with external libraries > Infer types from the exported function
+
+### External library
+
+```typescript
+// external library
+type UnExportedParam = { someProp: string };
+type UnExportedReturn = { someProp: string };
+
+// only the function was exported
+export async function doEverything(param: UnExportedParam): Promise<undefined | UnExportedReturn> {
+    return undefined;
+}
+```
+
+### Our usage
+
+```typescript
+type DoEverything = typeof doEverything;
+type DoEverythingParams = Parameters<DoEverything>;
+type DoEverythingReturn = Awaited<ReturnType<DoEverything>>;
+
+function createParam(): DoEverythingParams[0] {
+    return { someProp: 'test value' };
+}
+
+function handleReturn(value: DoEverythingReturn): void {
+    console.log(value?.someProp);
+}
+
+doEverything(createParam()).then(handleReturn);
+```
+
+### Benefits
+
+- we get all the benefits of that comes for having a type to work against
+- if the library has breaking changes our compilation would catch it
+- we don't have to maintain a mirror of the typings
