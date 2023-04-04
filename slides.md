@@ -256,3 +256,112 @@ anything = {color: 'red'};
 ```typescript
 type DontAllowName = { name: never; }
 ```
+
+### Questions before moving onto patterns ?
+
+---
+
+## Patterns > Dealing with constants > Defining types upfront
+
+```typescript
+type FruitName = 'apple' | 'orange';
+type FruitColor = 'orange' | 'red';
+
+type Fruit = { name: FruitName; color: FruitColor; }
+
+const fruits: Fruit[] = [
+    {name: 'apple', color: 'red'},
+    {name: 'orange', color: 'orange'}
+]
+
+fruits.forEach((fruit) => {
+    console.log(`The color of ${fruit.name} is ${fruit.color}`);
+});
+```
+
+### Issues
+
+- there is duplication here where you are defining the data type and value again.
+- every time you want to add a new colour or name you end up updating the type and the value
+- this way we are using typescript like any other language where we are defining types upfront
+
+### Questions
+
+- What's a better way to deal with this?
+
+---
+
+## Patterns > Dealing with constants > Inferring the type from the data
+
+```typescript
+const fruitNames = ['apple', 'orange'] as const;
+const fruitColours = ['orange', 'red'] as const;
+
+type FruitName = typeof fruitNames[number];
+type FruitColor = typeof fruitColours[number];
+
+type Fruit = { name: FruitName; color: FruitColor; }
+
+const fruits: Fruit[] = [
+    {name: 'apple', color: 'red'},
+    {name: 'orange', color: 'orange'}
+]
+
+fruits.forEach((fruit) => {
+    console.log(`The color of ${fruit.name} is ${fruit.color}`);
+});
+
+```
+
+### Benefits
+
+- a const assertion tells typescript that the data is restricted to these instead of string
+- the types are derived from the data instead
+- we only ever need to update the array and the type is automatically updated
+
+### Drawbacks
+
+- you can create data with incorrect types such as an apple with the colour orange
+```typescript
+const fruits: Fruit[] = [
+    {name: 'apple', color: 'orange'},
+    {name: 'orange', color: 'red'}
+]
+```
+
+### Questions
+
+- so how can we restrict the data while being able to iterate through all the data
+
+---
+
+## Patterns > Dealing with constants > Inferring the type from the final data
+
+```typescript
+const fruits = [
+    {
+        name: 'apple',
+        colour: 'red'
+    },
+    {
+        name: 'orange',
+        colour: 'orange'
+    }
+] as const;
+
+fruits.forEach((fruit) => {
+    console.log(`The color of ${fruit.name} is ${fruit.color}`);
+});
+
+type Fruit = typeof fruits[number];
+const apple: Fruit = { colour: 'red', name: 'apple' };
+
+const invalidApple: Fruit = { colour: 'orange', name: 'apple' }; // this would not compile
+
+```
+
+### Benefits
+
+- Fruit can be either of the objects that we have defined
+- The colour orange against the fruit apple is not a valid type
+- you can further access a sub property as a type
