@@ -468,3 +468,98 @@ doEverything(createParam()).then(handleReturn);
 - we get all the benefits of that comes for having a type to work against
 - if the library has breaking changes our compilation would catch it
 - we don't have to maintain a mirror of the typings
+
+---
+
+## Patterns > Mapping to a subtype of the original > Manually create jest mock types
+
+### One of many types that need to be mocked
+
+A logger which is used in the project with a test
+
+```typescript
+
+// actual code
+class Logger {
+    info(message: string) {
+    }
+
+    error(message: string) {
+    }
+}
+
+function logSomething(logger: Logger, message: string) {
+    logger.info(message);
+}
+
+// test code
+type MockLogger = {
+    info: jest.MockedFunction<Logger['info']>;
+    error: jest.MockedFunction<Logger['error']>;
+};
+
+const mockLogger: MockLogger = {
+    info: jest.fn(),
+    error: jest.fn(),
+};
+
+it('should log the message using info', () => {
+    logSomething(mockLogger, 'hello');
+
+    expect(mockLogger.info.mock.calls.length).toBe(1);
+});
+```
+
+### Issues
+
+- You end up creating a type for every type that you are mocking
+- This is just one of many types which need to be mocked
+- If the type changes you need to manually update your mocked type
+
+---
+
+## Patterns > Mapping to a subtype of the original > Create a mapper to handle all jest mock types
+
+
+### Create a mapped type
+
+```typescript
+
+// actual code
+class Logger {
+    info(message: string) {
+    }
+
+    error(message: string) {
+    }
+}
+
+function logSomething(logger: Logger, message: string) {
+    logger.info(message);
+}
+
+// our utility mapped type 
+type MockedObject<T extends object> = {
+    [key in keyof T]: T[key] extends ((...args: any[]) => any) ? jest.MockedFunction<T[key]> : T[key]
+}
+
+// test code
+type MockLogger = MockedObject<Logger>
+
+const mockLogger: MockLogger = {
+    info: jest.fn(),
+    error: jest.fn(),
+};
+
+it('should log the message using info', () => {
+    logSomething(mockLogger, 'hello');
+
+    expect(mockLogger.info.mock.calls.length).toBe(1);
+});
+```
+
+### Benefits
+
+- Just need one type which can map all objects which need to be mocked
+- If the actual type changes no changes are required to the utility type
+- If actual type loses a prop any usage of the mocked type prop will be caught by the compiler
