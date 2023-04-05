@@ -1,4 +1,4 @@
-# Welcome to Typescript playbook
+# Welcome
 
 ## What is this session about?
 
